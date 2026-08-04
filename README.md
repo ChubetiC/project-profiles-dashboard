@@ -28,3 +28,14 @@ API specification:
 
 - [docs/api-spec.md](docs/api-spec.md)
 
+Local development target:
+
+- Python 3.10
+
+Initial checks:
+
+```bash
+python -m pytest
+ruff check .
+mypy app tests
+```

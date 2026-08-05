@@ -39,3 +39,21 @@ python -m pytest
 ruff check .
 mypy app tests
 ```
+
+Local Docker services:
+
+- `api`: FastAPI application
+- `db`: PostgreSQL database
+- `minio`: S3-compatible object storage
+
+Start local infrastructure:
+
+```bash
+docker compose up --build
+```
+
+Useful local URLs:
+
+- API health check: `http://localhost:8000/health`
+- API docs: `http://localhost:8000/docs`
+- MinIO console: `http://localhost:9001`

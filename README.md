@@ -30,14 +30,15 @@ API specification:
 
 Local development target:
 
-- Python 3.10
+- Python 3.13
 
 Initial checks:
 
 ```bash
-python -m pytest
-ruff check .
-mypy app tests
+uv sync --extra dev
+uv run --extra dev pytest
+uv run --extra dev ruff check .
+uv run --extra dev mypy app tests
 ```
 
 Local Docker services:

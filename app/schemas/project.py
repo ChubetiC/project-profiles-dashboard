@@ -22,3 +22,10 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+class ProjectInviteResponse(BaseModel):
+    project_id: int
+    user_id: int
+    login: str
+    role: str
+

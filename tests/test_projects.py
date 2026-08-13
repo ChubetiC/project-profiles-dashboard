@@ -120,3 +120,116 @@ def test_project_endpoints_require_authentication(client: TestClient) -> None:
     response = client.get("/projects")
 
     assert response.status_code == 401
+
+
+def test_owner_can_invite_participant(client: TestClient) -> None:
+    owner_headers = register_and_login(client, "owner")
+    participant_headers = register_and_login(client, "participant")
+    create_response = client.post(
+        "/projects",
+        json={"name": "Shared Project", "description": "Visible after invite"},
+        headers=owner_headers,
+    )
+    project_id = create_response.json()["id"]
+
+    invite_response = client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "participant"},
+        headers=owner_headers,
+    )
+    participant_projects_response = client.get("/projects", headers=participant_headers)
+
+    assert invite_response.status_code == 200
+    assert invite_response.json() == {
+        "project_id": project_id,
+        "user_id": 2,
+        "login": "participant",
+        "role": "participant",
+    }
+    assert participant_projects_response.status_code == 200
+    assert participant_projects_response.json()[0]["id"] == project_id
+    assert participant_projects_response.json()[0]["role"] == "participant"
+
+
+def test_participant_can_update_but_cannot_delete_project(client: TestClient) -> None:
+    owner_headers = register_and_login(client, "owner")
+    participant_headers = register_and_login(client, "participant")
+    create_response = client.post(
+        "/projects",
+        json={"name": "Shared Project", "description": "Before update"},
+        headers=owner_headers,
+    )
+    project_id = create_response.json()["id"]
+    client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "participant"},
+        headers=owner_headers,
+    )
+
+    update_response = client.put(
+        f"/project/{project_id}/info",
+        json={"name": "Updated by Participant", "description": "After update"},
+        headers=participant_headers,
+    )
+    delete_response = client.delete(f"/project/{project_id}", headers=participant_headers)
+
+    assert update_response.status_code == 200
+    assert update_response.json()["name"] == "Updated by Participant"
+    assert update_response.json()["role"] == "participant"
+    assert delete_response.status_code == 403
+
+
+def test_participant_cannot_invite_users(client: TestClient) -> None:
+    owner_headers = register_and_login(client, "owner")
+    participant_headers = register_and_login(client, "participant")
+    register_and_login(client, "third")
+    create_response = client.post(
+        "/projects",
+        json={"name": "Shared Project", "description": "Only owner invites"},
+        headers=owner_headers,
+    )
+    project_id = create_response.json()["id"]
+    client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "participant"},
+        headers=owner_headers,
+    )
+
+    response = client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "third"},
+        headers=participant_headers,
+    )
+
+    assert response.status_code == 403
+
+
+def test_invite_missing_or_existing_access_returns_error(client: TestClient) -> None:
+    owner_headers = register_and_login(client, "owner")
+    register_and_login(client, "participant")
+    create_response = client.post(
+        "/projects",
+        json={"name": "Shared Project", "description": "Invite validation"},
+        headers=owner_headers,
+    )
+    project_id = create_response.json()["id"]
+
+    missing_user_response = client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "missing"},
+        headers=owner_headers,
+    )
+    first_invite_response = client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "participant"},
+        headers=owner_headers,
+    )
+    duplicate_invite_response = client.post(
+        f"/project/{project_id}/invite",
+        params={"user": "participant"},
+        headers=owner_headers,
+    )
+
+    assert missing_user_response.status_code == 404
+    assert first_invite_response.status_code == 200
+    assert duplicate_invite_response.status_code == 409

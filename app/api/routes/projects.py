@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.db.models import Project, User
 from app.db.session import get_db
-from app.schemas.project import ProjectCreateRequest, ProjectResponse, ProjectUpdateRequest
+from app.schemas.project import (
+    ProjectCreateRequest,
+    ProjectInviteResponse,
+    ProjectResponse,
+    ProjectUpdateRequest,
+)
 from app.services.project_service import (
     create_project,
     delete_project_as_owner,
     get_project_info,
+    invite_project_participant,
     list_user_projects,
     update_project_info,
 )
@@ -87,4 +93,25 @@ def delete_project_endpoint(
 ) -> Response:
     delete_project_as_owner(db, project_id=project_id, user=current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/project/{project_id}/invite", response_model=ProjectInviteResponse)
+def invite_project_participant_endpoint(
+    project_id: int,
+    user_login: str = Query(alias="user", min_length=1, max_length=80),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> ProjectInviteResponse:
+    project_access, invited_user = invite_project_participant(
+        db,
+        project_id=project_id,
+        requester=current_user,
+        invited_login=user_login,
+    )
+    return ProjectInviteResponse(
+        project_id=project_access.project_id,
+        user_id=invited_user.id,
+        login=invited_user.login,
+        role=project_access.role,
+    )
 

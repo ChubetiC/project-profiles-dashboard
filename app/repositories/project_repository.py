@@ -34,6 +34,28 @@ def get_project_with_role(db: Session, project_id: int, user: User) -> tuple[Pro
     return db.execute(statement).tuples().one_or_none()
 
 
+def get_project_access(db: Session, project_id: int, user_id: int) -> ProjectAccess | None:
+    return db.scalar(
+        select(ProjectAccess).where(
+            ProjectAccess.project_id == project_id,
+            ProjectAccess.user_id == user_id,
+        )
+    )
+
+
+def create_project_access(
+    db: Session,
+    project_id: int,
+    user_id: int,
+    role: str,
+) -> ProjectAccess:
+    project_access = ProjectAccess(project_id=project_id, user_id=user_id, role=role)
+    db.add(project_access)
+    db.commit()
+    db.refresh(project_access)
+    return project_access
+
+
 def save_project(db: Session, project: Project) -> Project:
     db.commit()
     db.refresh(project)

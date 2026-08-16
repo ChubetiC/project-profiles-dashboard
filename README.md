@@ -50,6 +50,7 @@ Local Docker services:
 Start local infrastructure:
 
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 

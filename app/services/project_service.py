@@ -1,4 +1,3 @@
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.models import Project, ProjectAccess, User
@@ -12,6 +11,12 @@ from app.repositories.project_repository import (
     save_project,
 )
 from app.repositories.user_repository import get_user_by_login
+from app.services.exceptions import (
+    OnlyProjectOwnerAllowedError,
+    ProjectAccessAlreadyExistsError,
+    ProjectNotFoundError,
+    UserNotFoundError,
+)
 
 OWNER_ROLE = "owner"
 PARTICIPANT_ROLE = "participant"
@@ -29,10 +34,7 @@ def list_user_projects(db: Session, user: User) -> list[tuple[Project, str]]:
 def get_project_info(db: Session, project_id: int, user: User) -> tuple[Project, str]:
     project_with_role = get_project_with_role(db, project_id=project_id, user=user)
     if project_with_role is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found",
-        )
+        raise ProjectNotFoundError
 
     return project_with_role
 
@@ -53,10 +55,7 @@ def update_project_info(
 def delete_project_as_owner(db: Session, project_id: int, user: User) -> None:
     project, role = get_project_info(db, project_id=project_id, user=user)
     if role != OWNER_ROLE:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only project owner can delete project",
-        )
+        raise OnlyProjectOwnerAllowedError
 
     delete_project(db, project)
 
@@ -69,24 +68,15 @@ def invite_project_participant(
 ) -> tuple[ProjectAccess, User]:
     _, requester_role = get_project_info(db, project_id=project_id, user=requester)
     if requester_role != OWNER_ROLE:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only project owner can invite users",
-        )
+        raise OnlyProjectOwnerAllowedError
 
     invited_user = get_user_by_login(db, invited_login)
     if invited_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+        raise UserNotFoundError
 
     existing_access = get_project_access(db, project_id=project_id, user_id=invited_user.id)
     if existing_access is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User already has access to this project",
-        )
+        raise ProjectAccessAlreadyExistsError
 
     project_access = create_project_access(
         db,

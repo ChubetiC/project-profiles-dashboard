@@ -24,3 +24,15 @@ class UserNotFoundError(ServiceError):
 
 class ProjectAccessAlreadyExistsError(ServiceError):
     pass
+
+
+class DocumentNotFoundError(ServiceError):
+    pass
+
+
+class UnsupportedFileTypeError(ServiceError):
+    pass
+
+
+class ProjectStorageLimitExceededError(ServiceError):
+    pass

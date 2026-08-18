@@ -31,15 +31,15 @@ def test_upload_and_list_project_documents(client: TestClient) -> None:
 
     upload_response = client.post(
         f"/project/{project_id}/documents",
-        files=[("files", ("requirements.pdf", b"pdf bytes", "application/pdf"))],
+        files={"file": ("requirements.pdf", b"pdf bytes", "application/pdf")},
         headers=owner_headers,
     )
     list_response = client.get(f"/project/{project_id}/documents", headers=owner_headers)
     project_response = client.get(f"/project/{project_id}/info", headers=owner_headers)
 
     assert upload_response.status_code == 201
-    assert upload_response.json()[0]["filename"] == "requirements.pdf"
-    assert upload_response.json()[0]["size_bytes"] == 9
+    assert upload_response.json()["filename"] == "requirements.pdf"
+    assert upload_response.json()["size_bytes"] == 9
     assert list_response.status_code == 200
     assert list_response.json()[0]["filename"] == "requirements.pdf"
     assert project_response.json()["total_documents_size_bytes"] == 9
@@ -51,10 +51,10 @@ def test_download_document_requires_project_access(client: TestClient) -> None:
     project_id = create_project(client, owner_headers)
     upload_response = client.post(
         f"/project/{project_id}/documents",
-        files=[("files", ("brief.docx", b"docx bytes", "application/vnd.openxmlformats"))],
+        files={"file": ("brief.docx", b"docx bytes", "application/vnd.openxmlformats")},
         headers=owner_headers,
     )
-    document_id = upload_response.json()[0]["id"]
+    document_id = upload_response.json()["id"]
 
     allowed_response = client.get(f"/document/{document_id}", headers=owner_headers)
     forbidden_response = client.get(f"/document/{document_id}", headers=other_headers)
@@ -69,10 +69,10 @@ def test_update_document_replaces_metadata_and_size(client: TestClient) -> None:
     project_id = create_project(client, owner_headers)
     upload_response = client.post(
         f"/project/{project_id}/documents",
-        files=[("files", ("old.pdf", b"old", "application/pdf"))],
+        files={"file": ("old.pdf", b"old", "application/pdf")},
         headers=owner_headers,
     )
-    document_id = upload_response.json()[0]["id"]
+    document_id = upload_response.json()["id"]
 
     update_response = client.put(
         f"/document/{document_id}",
@@ -92,10 +92,10 @@ def test_delete_document_removes_metadata_and_size(client: TestClient) -> None:
     project_id = create_project(client, owner_headers)
     upload_response = client.post(
         f"/project/{project_id}/documents",
-        files=[("files", ("delete-me.pdf", b"content", "application/pdf"))],
+        files={"file": ("delete-me.pdf", b"content", "application/pdf")},
         headers=owner_headers,
     )
-    document_id = upload_response.json()[0]["id"]
+    document_id = upload_response.json()["id"]
 
     delete_response = client.delete(f"/document/{document_id}", headers=owner_headers)
     get_response = client.get(f"/document/{document_id}", headers=owner_headers)
@@ -112,7 +112,7 @@ def test_upload_rejects_unsupported_file_type(client: TestClient) -> None:
 
     response = client.post(
         f"/project/{project_id}/documents",
-        files=[("files", ("notes.txt", b"text", "text/plain"))],
+        files={"file": ("notes.txt", b"text", "text/plain")},
         headers=owner_headers,
     )
 

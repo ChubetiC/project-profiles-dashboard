@@ -69,31 +69,27 @@ def list_project_documents_endpoint(
 
 @router.post(
     "/project/{project_id}/documents",
-    response_model=list[DocumentResponse],
+    response_model=DocumentResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def upload_project_documents_endpoint(
+async def upload_project_document_endpoint(
     project_id: int,
-    files: list[UploadFile] = File(),
+    file: UploadFile = File(),
     db: Session = Depends(get_db),
     storage: DocumentStorage = Depends(get_document_storage),
     current_user: User = Depends(get_current_user),
-) -> list[DocumentResponse]:
-    uploaded_documents: list[Document] = []
+) -> DocumentResponse:
     try:
-        for file in files:
-            content = await file.read()
-            uploaded_documents.append(
-                upload_project_document(
-                    db,
-                    storage=storage,
-                    project_id=project_id,
-                    user=current_user,
-                    filename=file.filename or "",
-                    content_type=file.content_type,
-                    content=content,
-                )
-            )
+        content = await file.read()
+        document = upload_project_document(
+            db,
+            storage=storage,
+            project_id=project_id,
+            user=current_user,
+            filename=file.filename or "",
+            content_type=file.content_type,
+            content=content,
+        )
     except ProjectNotFoundError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -110,7 +106,7 @@ async def upload_project_documents_endpoint(
             detail="Project storage limit exceeded",
         ) from error
 
-    return [DocumentResponse.from_document(document) for document in uploaded_documents]
+    return DocumentResponse.from_document(document)
 
 
 @router.get("/document/{document_id}")

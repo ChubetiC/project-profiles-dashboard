@@ -41,6 +41,12 @@ uv run --extra dev ruff check .
 uv run --extra dev mypy app tests
 ```
 
+Manual API flow check:
+
+```bash
+uv run --extra dev python scripts/check_api.py
+```
+
 Local Docker services:
 
 - `api`: FastAPI application

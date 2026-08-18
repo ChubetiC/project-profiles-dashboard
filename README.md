@@ -41,6 +41,9 @@ uv run --extra dev ruff check .
 uv run --extra dev mypy app tests
 ```
 
+GitHub Actions runs the same test, lint, and type-check commands on pushes to `main`
+and on pull requests.
+
 Manual API flow check:
 
 ```bash

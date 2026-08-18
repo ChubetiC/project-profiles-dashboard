@@ -252,6 +252,7 @@ Output:
   {
     "id": 10,
     "project_id": 1,
+    "uploaded_by_user_id": 2,
     "filename": "requirements.pdf",
     "content_type": "application/pdf",
     "size_bytes": 1048576,
@@ -274,7 +275,7 @@ Errors:
 
 ## POST /project/{project_id}/documents
 
-Upload one or more documents to a project.
+Upload one document to a project.
 
 Initial implementation plan: the API receives the file bytes and uploads them to object storage.
 
@@ -283,23 +284,22 @@ Optional future improvement: use pre-signed upload URLs so the client can upload
 Input:
 
 - `multipart/form-data`
-- field name: `files`
+- field name: `file`
 - allowed types: `application/pdf`, DOCX MIME type
 
 Output:
 
 ```json
-[
-  {
-    "id": 10,
-    "project_id": 1,
-    "filename": "requirements.pdf",
-    "content_type": "application/pdf",
-    "size_bytes": 1048576,
-    "created_at": "<ISO datetime>",
-    "updated_at": "<ISO datetime>"
-  }
-]
+{
+  "id": 10,
+  "project_id": 1,
+  "uploaded_by_user_id": 2,
+  "filename": "requirements.pdf",
+  "content_type": "application/pdf",
+  "size_bytes": 1048576,
+  "created_at": "<ISO datetime>",
+  "updated_at": "<ISO datetime>"
+}
 ```
 
 Success:
@@ -353,6 +353,7 @@ Output:
 {
   "id": 10,
   "project_id": 1,
+  "uploaded_by_user_id": 2,
   "filename": "requirements-v2.pdf",
   "content_type": "application/pdf",
   "size_bytes": 2097152,

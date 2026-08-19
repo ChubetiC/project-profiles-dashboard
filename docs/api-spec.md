@@ -114,6 +114,7 @@ Output:
   "id": 1,
   "name": "Internal Dashboard",
   "description": "Dashboard for storing project details and documents",
+  "role": "owner",
   "total_documents_size_bytes": 0,
   "created_at": "<ISO datetime>",
   "updated_at": "<ISO datetime>"
@@ -168,6 +169,7 @@ Output:
   "id": 1,
   "name": "Internal Dashboard",
   "description": "Dashboard for storing project details and documents",
+  "role": "owner",
   "total_documents_size_bytes": 1048576,
   "created_at": "<ISO datetime>",
   "updated_at": "<ISO datetime>"
@@ -205,6 +207,7 @@ Output:
   "id": 1,
   "name": "Updated Dashboard",
   "description": "Updated description",
+  "role": "owner",
   "total_documents_size_bytes": 1048576,
   "created_at": "<ISO datetime>",
   "updated_at": "<ISO datetime>"
@@ -400,17 +403,25 @@ Grant participant access to another user. Only project owner can invite.
 
 Output:
 
-No response body.
+```json
+{
+  "project_id": 1,
+  "user_id": 2,
+  "login": "participant_user",
+  "role": "participant"
+}
+```
 
 Success:
 
-- `204 No Content`
+- `200 OK`
 
 Errors:
 
 - `401` missing or invalid token
 - `403` current user is not project owner
 - `404` project or invited user not found
+- `409` user already has access to this project
 - `500` unexpected server error
 
 ## Optional: GET /project/{project_id}/share?with={email}
